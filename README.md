@@ -3,7 +3,7 @@ GUI for the knife edge device used in the Miller lab.
 
 # Introduction
 
-This GUI uses wxPython to create an interface to connect to a server via TCP/IP and send and receive commands.
+This GUI uses wxPython to create an interface to connect to a server via TCP/IP to send commands and receive responses from a step motor controller via serial.
 
 # Usage
 
