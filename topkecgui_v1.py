@@ -4,6 +4,8 @@
 # I am learning a bit of object-oriented programming and TCP/IP connections in Python.
 # This is not going to be an amazing bit of code!
 # TODO Implement a loop such that connection is established once and not every time a command is sent.
+# TODO Software encoder for the position of the stage.
+# TODO Add toggle for rev/s or micron/s.
 
 import wx 
 import socket
@@ -190,7 +192,10 @@ class GUIframe(wx.Frame):
 		client.connect(('127.0.0.1', 7777))
 		client.send('V' + speed + '\n')
 		resp = client.recv(8192)
-		self.serverResponse.SetValue(resp)
+		if (len(resp) > 0):
+			self.serverResponse.SetValue("Command sent. Velocity: " + speed + " rev/s")
+		else:
+			self.serverResponse.SetValue("Failed to send command")
 		client.shutdown(socket.SHUT_RDWR)
 		client.close()
 
@@ -200,7 +205,10 @@ class GUIframe(wx.Frame):
 		client.connect(('127.0.0.1', 7777))
 		client.send('GO\n')
 		resp = client.recv(4096)
-		self.serverResponse.SetValue(resp)
+		if (len(resp) > 0):
+			self.serverResponse.SetValue("Command sent. GO")
+		else:
+			self.serverResponse.SetValue("Failed to send command")
 		client.shutdown(socket.SHUT_RDWR)
 		client.close()
 
@@ -215,7 +223,10 @@ class GUIframe(wx.Frame):
 		client.connect(('127.0.0.1', 7777))
 		client.send(distanceForward)
 		resp = client.recv(4096)
-		self.serverResponse.SetValue(resp)
+		if (len(resp) > 0):
+			self.serverResponse.SetValue("Command sent. D+ " + str(revForward) + " revolutions")
+		else:
+			self.serverResponse.SetValue("Failed to send command")
 		client.shutdown(socket.SHUT_RDWR)
 		client.close()
 
@@ -230,7 +241,10 @@ class GUIframe(wx.Frame):
 		client.connect(('127.0.0.1', 7777))
 		client.send(distanceReverse)
 		resp = client.recv(4096)
-		self.serverResponse.SetValue(resp)
+		if (len(resp) > 0):
+			self.serverResponse.SetValue("Command sent. D- " + str(revReverse) + " revolutions")
+		else:
+			self.serverResponse.SetValue("Failed to send command")
 		client.shutdown(socket.SHUT_RDWR)
 		client.close()
 
