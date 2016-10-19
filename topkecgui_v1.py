@@ -55,7 +55,6 @@ class GUIframe(wx.Frame):
 			size = (100,-1)
 			)
 
-		# TODO Add distance choice as well.
 		distanceLabel = wx.StaticText(
 			panel, 
 			-1, 
@@ -85,11 +84,19 @@ class GUIframe(wx.Frame):
 			style = wx.CB_READONLY
 			)
 
+		directionOptions = ['Forward', 'Reverse']
+		self.directionChoice = wx.ComboBox(
+			panel,
+			-1,
+			choices = directionOptions,
+			style = wx.CB_READONLY
+			)
+
 		# Server response box.
 		self.serverResponse = wx.TextCtrl(
 			panel,
 			-1,
-			"Server response here",
+			"Server response.",
 			style=wx.TE_CENTRE,
 			size = (300, 100)
 			)
@@ -98,13 +105,24 @@ class GUIframe(wx.Frame):
 		titleText = wx.StaticText(
 			panel,
 			-1,
-			"Welcome to topKEC."
+			"Welcome to topKEC. Please select your functions below."
 			)
 
 		footerText = wx.StaticText(
 			panel,
 			-1,
 			"(c) 2016 - Miller Group."
+			)
+
+		splashLogo = wx.Image(
+			'logo.png',
+			wx.BITMAP_TYPE_ANY
+			)
+		
+		splashLogoBitmap = wx.StaticBitmap(
+			panel,
+			-1,
+			wx.BitmapFromImage(splashLogo)
 			)
 	
 		# Control buttons.
@@ -114,16 +132,10 @@ class GUIframe(wx.Frame):
 			size = (50,-1)
 			)
 
-		forwardButton = wx.Button(
+		okDistanceButton = wx.Button(
 			panel,
-			label="Forward",
-			size = (100,-1)
-			)
-
-		reverseButton = wx.Button(
-			panel,
-			label="Reverse",
-			size = (100,-1)
+			label = "OK",
+			size = (50, -1)
 			)
 
 		quitButton = wx.Button(
@@ -144,30 +156,57 @@ class GUIframe(wx.Frame):
 			size = (100, -1)
 			)
 
+		# Position tracking (software encoder).
+		currentPositionText = wx.StaticText(
+			panel,
+			-1,
+			"Current position (micron):"
+			)
+
+		self.currentPositionTracker = wx.TextCtrl(
+			panel,
+			-1,
+			"0",
+			style=wx.TE_CENTRE,
+			size = (75, 30)
+			)
+
+		unitText = wx.StaticText(
+			panel,
+			-1,
+			"microns"
+			)
+
+		zeroPositionButton = wx.Button(
+			panel,
+			label = "Zero Position",
+			size = (100, -1)
+			)
+
 		# Event control.
 		self.Bind(wx.EVT_BUTTON, self.quitProgram, quitButton)
 		self.Bind(wx.EVT_CLOSE, self.closeWindow)
 		self.Bind(wx.EVT_BUTTON, self.setSpeed, okSpeedButton)
-		self.Bind(wx.EVT_BUTTON, self.setDistanceForward, forwardButton)
-		self.Bind(wx.EVT_BUTTON, self.setDistanceReverse, reverseButton)
+		self.Bind(wx.EVT_BUTTON, self.setDistance, okDistanceButton)
 		self.Bind(wx.EVT_BUTTON, self.moveStage, goButton)
 		self.Bind(wx.EVT_BUTTON, self.helpWindow, helpButton)
 
 		# GUI setup. Add sizers
 		topSizer = wx.BoxSizer(wx.VERTICAL)
 		titleSizer = wx.BoxSizer(wx.HORIZONTAL)
-		# logoSizer = wx.BoxSizer(wx.HORIZONTAL)
+		logoSizer = wx.BoxSizer(wx.HORIZONTAL)
 		speedSizer = wx.BoxSizer(wx.HORIZONTAL)
 		distanceSizer = wx.BoxSizer(wx.HORIZONTAL)
 		directionSizer = wx.BoxSizer(wx.HORIZONTAL)
 		bottomSizer = wx.BoxSizer(wx.HORIZONTAL)
 		responseSizer = wx.BoxSizer(wx.HORIZONTAL)
+		encoderSizer = wx.BoxSizer(wx.HORIZONTAL)
 		infoSizer = wx.BoxSizer(wx.HORIZONTAL)
 
 		# Fill boxes with GUI contents/widgets.
-		titleSizer.Add(titleText, 0, wx.ALL, 5)
+		logoSizer.Add(splashLogoBitmap, 0, wx.ALL, 5)
 
-		# logoSizer.Add(logoSplash, 0, wx.ALL, 5)
+		titleSizer.Add(titleText, 0, wx.ALL, 5)
 
 		speedSizer.Add(speedLabel, 0, wx.ALL, 5)
 		speedSizer.Add(self.speedOption, 0, wx.ALL|wx.EXPAND, 5)
@@ -179,8 +218,8 @@ class GUIframe(wx.Frame):
 		distanceSizer.Add(self.distanceChoice, 0, wx.ALL|wx.EXPAND, 5)
 
 		directionSizer.Add(directionLabel, 0, wx.ALL, 5)
-		directionSizer.Add(forwardButton, 0, wx.ALL, 5)
-		directionSizer.Add(reverseButton, 0, wx.ALL, 5)
+		directionSizer.Add(self.directionChoice, 0, wx.ALL, 5)
+		directionSizer.Add(okDistanceButton, 0, wx.ALL, 5)
 
 		bottomSizer.Add(goButton, 0, wx.ALL, 5)
 		bottomSizer.Add(helpButton, 0, wx.ALL, 5)
@@ -188,10 +227,15 @@ class GUIframe(wx.Frame):
 
 		responseSizer.Add(self.serverResponse, 0, wx.ALL|wx.EXPAND, 5)
 
+		encoderSizer.Add(currentPositionText, 0, wx.ALL, 5)
+		encoderSizer.Add(self.currentPositionTracker, 0, wx.ALL, 5)
+		encoderSizer.Add(unitText, 0, wx.ALL, 5)
+		encoderSizer.Add(zeroPositionButton, 0, wx.ALL, 5)
+
 		infoSizer.Add(footerText, 0, wx.ALL, 5)
 
+		topSizer.Add(logoSizer, 0, wx.CENTER)
 		topSizer.Add(titleSizer, 0, wx.CENTER)
-		# topSizer.Add(logoSizer, 0, wx.CENTER)
 		topSizer.Add(wx.StaticLine(panel,), 0, wx.ALL|wx.EXPAND, 5)
 		topSizer.Add(speedSizer, 0, wx.ALL|wx.CENTER, 5)
 		topSizer.Add(wx.StaticLine(panel,), 0, wx.ALL|wx.EXPAND, 5)
@@ -201,6 +245,8 @@ class GUIframe(wx.Frame):
 		topSizer.Add(bottomSizer, 0, wx.ALL|wx.CENTER, 5)
 		topSizer.Add(wx.StaticLine(panel,), 0, wx.ALL|wx.EXPAND, 5)
 		topSizer.Add(responseSizer, 0, wx.ALL|wx.CENTER, 5)
+		topSizer.Add(wx.StaticLine(panel,), 0, wx.ALL|wx.EXPAND, 5)
+		topSizer.Add(encoderSizer, 0, wx.ALL|wx.EXPAND, 5)
 		topSizer.Add(wx.StaticLine(panel,), 0, wx.ALL|wx.EXPAND, 5)
 		topSizer.Add(infoSizer, 0, wx.ALL|wx.CENTER, 5)
 
@@ -234,67 +280,72 @@ class GUIframe(wx.Frame):
 		client.close()
 
 	def moveStage(self, event):
+		
 		#TCP/IP communication.
 		client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		client.connect(('127.0.0.1', 7777))
 		client.send('GO\n')
 		resp = client.recv(4096)
 		if (len(resp) > 0):
-			self.serverResponse.SetValue("Command sent. GO")
+			self.serverResponse.SetValue("Command sent. Staged is moving.")
 		else:
 			self.serverResponse.SetValue("Failed to send command")
 		client.shutdown(socket.SHUT_RDWR)
 		client.close()
 
-	def setDistanceForward(self, event):
-		# Generate variable from the user response.
-		revForward = float(self.distanceOption.GetValue())
-		forwardUnits = self.distanceChoice.GetValue()
-		command = ''
-
-		# Determine units of user choice.
-		if (forwardUnits == 'Revolutions'):
-			command = 'D+' + str(revForward * 25000) + '\n'
-		elif (forwardUnits == 'Millimetres'):
-			# 1 revolution = 4.91 mm travelled.
-			command = 'D+' + str(revForward * (25,000/4.91)) + '\n'
-
-		#TCP/IP communication.
-		client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		client.connect(('127.0.0.1', 7777))
-		client.send(command)
-		resp = client.recv(4096)
-		if (len(resp) > 0):
-			self.serverResponse.SetValue("Command sent. Distance set forward.")
-		else:
-			self.serverResponse.SetValue("Failed to send command")
-		client.shutdown(socket.SHUT_RDWR)
-		client.close()
-
-	def setDistanceReverse(self, event):
-		# Generate variable from the user response.
-		revReverse = float(self.distanceOption.GetValue())
-		reverseUnits = self.distanceChoice.GetValue()
-		command = ''
+	def setDistance(self, event):
+		# Check to see which direction is desired.
+		directionChoice = self.directionChoice.GetValue()
 		
-		# Determine units of user choice.
-		if (reverseUnits == 'Revolutions'):
-			command = 'D-' + str(revReverse * 25000) + '\n'
-		elif (reverseUnits == 'Millimetres'):
-			# 1 revolution = 4.91 mm travelled.
-			command = 'D-' + str(revReverse * (25,000/4.91)) + '\n'
+		# Issue conditionals.
+		if (directionChoice == 'Forward'):
+			revForward = float(self.distanceOption.GetValue())
+			forwardUnits = self.distanceChoice.GetValue()
+			command = ''
 
-		#TCP/IP communication.
-		client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		client.connect(('127.0.0.1', 7777))
-		client.send(command)
-		resp = client.recv(4096)
-		if (len(resp) > 0):
-			self.serverResponse.SetValue("Command sent. Distance set reverse.")
-		else:
-			self.serverResponse.SetValue("Failed to send command")
-		client.shutdown(socket.SHUT_RDWR)
-		client.close()
+			# Determine units of user choice.
+			if (forwardUnits == 'Revolutions'):
+				command = 'D+' + str(revForward * 25000) + '\n'
+			elif (forwardUnits == 'Millimetres'):
+				# 1 revolution = 4.91 mm travelled.
+				command = 'D+' + str(revForward * (25,000/4.91)) + '\n'
+
+			#TCP/IP communication.
+			client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			client.connect(('127.0.0.1', 7777))
+			client.send(command)
+			resp = client.recv(4096)
+			if (len(resp) > 0):
+				self.serverResponse.SetValue("Command sent. Distance set forward.")
+			else:
+				self.serverResponse.SetValue("Failed to send command")
+			client.shutdown(socket.SHUT_RDWR)
+			client.close()
+
+		elif (directionChoice == 'Reverse'):
+			# Generate variable from the user response.
+			revReverse = float(self.distanceOption.GetValue())
+			reverseUnits = self.distanceChoice.GetValue()
+			command = ''
+		
+			# Determine units of user choice.
+			if (reverseUnits == 'Revolutions'):
+				command = 'D-' + str(revReverse * 25000) + '\n'
+			elif (reverseUnits == 'Millimetres'):
+				# 1 revolution = 4.91 mm travelled.
+				command = 'D-' + str(revReverse * (25,000/4.91)) + '\n'
+
+			#TCP/IP communication.
+			client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			client.connect(('127.0.0.1', 7777))
+			client.send(command)
+			resp = client.recv(4096)
+			if (len(resp) > 0):
+				self.serverResponse.SetValue("Command sent. Distance set reverse.")
+			else:
+				self.serverResponse.SetValue("Failed to send command")
+			client.shutdown(socket.SHUT_RDWR)
+			client.close()
 
 	# Other functions.
 	def quitProgram(self, event):
@@ -317,7 +368,7 @@ class GUIframe(wx.Frame):
 
 		info.SetIcon(wx.Icon('logo.png', wx.BITMAP_TYPE_PNG))
 		info.SetName('topKEC')
-		info.SetVersion('0.0.1')
+		info.SetVersion('0.0.2')
 		info.SetDescription(description)
 		info.SetCopyright('(C) 2016 Kamil Krawczyk')
 		info.SetWebSite('www.kamilkrawczyk.ca')
@@ -338,6 +389,6 @@ if __name__ == '__main__':
 	app = wx.App()
 	GUIframe(
 		None, 
-		title="topKEC GUI v0.0.1"					# Set title of window.
+		title="topKEC GUI v0.0.2"					# Set title of window.
 		)
 	app.MainLoop()
