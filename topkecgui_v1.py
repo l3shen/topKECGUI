@@ -38,10 +38,10 @@ class GUIframe(wx.Frame):
 		speedLabel = wx.StaticText(
 			panel, 
 			-1, 
-			"Enter speed (rev/s):"
+			"Enter speed:"
 			)
 
-		self.speedOption = wx.TextCtrl(					# MAKE SURE THINGS IN OTHER DEFINITIONS ARE FUCKING LABELLED SELF GODDSAMN IT
+		self.speedOption = wx.TextCtrl(					# MAKE SURE THINGS IN OTHER DEFINITIONS ARE FUCKING LABELLED SELF urggh
 			panel, 
 			-1, 
 			"1.0", 
@@ -55,16 +55,34 @@ class GUIframe(wx.Frame):
 			size = (100,-1)
 			)
 
+		# TODO Add distance choice as well.
 		distanceLabel = wx.StaticText(
 			panel, 
 			-1, 
-			"Enter number of revolutions:"
+			"Enter distance:"
 			)
 
 		directionLabel = wx.StaticText(
 			panel, 
 			-1, 
 			"Select direction:"
+			)
+
+		# Options for speed/distance.
+		speedOptions = ['rev/s', 'micron/s']
+		self.speedChoice = wx.ComboBox(
+			panel,
+			-1,
+			choices = speedOptions,
+			style = wx.CB_READONLY
+			)
+
+		distanceOptions = ['Revolutions', 'Millimetres']
+		self.distanceChoice = wx.ComboBox(
+			panel,
+			-1,
+			choices = distanceOptions,
+			style = wx.CB_READONLY
 			)
 
 		# Server response box.
@@ -76,7 +94,7 @@ class GUIframe(wx.Frame):
 			size = (300, 100)
 			)
 
-		# Title and footer text.
+		# Title and footer text/images.
 		titleText = wx.StaticText(
 			panel,
 			-1,
@@ -138,6 +156,7 @@ class GUIframe(wx.Frame):
 		# GUI setup. Add sizers
 		topSizer = wx.BoxSizer(wx.VERTICAL)
 		titleSizer = wx.BoxSizer(wx.HORIZONTAL)
+		# logoSizer = wx.BoxSizer(wx.HORIZONTAL)
 		speedSizer = wx.BoxSizer(wx.HORIZONTAL)
 		distanceSizer = wx.BoxSizer(wx.HORIZONTAL)
 		directionSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -148,12 +167,16 @@ class GUIframe(wx.Frame):
 		# Fill boxes with GUI contents/widgets.
 		titleSizer.Add(titleText, 0, wx.ALL, 5)
 
+		# logoSizer.Add(logoSplash, 0, wx.ALL, 5)
+
 		speedSizer.Add(speedLabel, 0, wx.ALL, 5)
 		speedSizer.Add(self.speedOption, 0, wx.ALL|wx.EXPAND, 5)
+		speedSizer.Add(self.speedChoice, 0, wx.ALL|wx.EXPAND, 5)
 		speedSizer.Add(okSpeedButton, 0, wx.ALL|wx.EXPAND, 5)
 
 		distanceSizer.Add(distanceLabel, 0, wx.ALL, 5)
 		distanceSizer.Add(self.distanceOption, 0, wx.ALL|wx.EXPAND, 5)
+		distanceSizer.Add(self.distanceChoice, 0, wx.ALL|wx.EXPAND, 5)
 
 		directionSizer.Add(directionLabel, 0, wx.ALL, 5)
 		directionSizer.Add(forwardButton, 0, wx.ALL, 5)
@@ -168,6 +191,7 @@ class GUIframe(wx.Frame):
 		infoSizer.Add(footerText, 0, wx.ALL, 5)
 
 		topSizer.Add(titleSizer, 0, wx.CENTER)
+		# topSizer.Add(logoSizer, 0, wx.CENTER)
 		topSizer.Add(wx.StaticLine(panel,), 0, wx.ALL|wx.EXPAND, 5)
 		topSizer.Add(speedSizer, 0, wx.ALL|wx.CENTER, 5)
 		topSizer.Add(distanceSizer, 0, wx.ALL|wx.CENTER, 5)
@@ -186,14 +210,23 @@ class GUIframe(wx.Frame):
 	def setSpeed(self, event):
 		# Generate variable from the user response.
 		speed = self.speedOption.GetValue()
+		command = ''
+
+		# Determine user units of choice.
+		units = self.speedChoice.GetValue()
+		if (units == 'rev/s'):						# If user selects rev/s, it is default.
+			command = 'V' + speed + '\n'
+		elif (units == 'micron/s'):
+			command = 'V' + str(int(speed * (6.13333e-4))) + '\n'
 		
 		# TCP/IP communication.
+		# TODO Make this a function and not repeat it throughout.
 		client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		client.connect(('127.0.0.1', 7777))
-		client.send('V' + speed + '\n')
+		client.send(command)
 		resp = client.recv(8192)
 		if (len(resp) > 0):
-			self.serverResponse.SetValue("Command sent. Velocity: " + speed + " rev/s")
+			self.serverResponse.SetValue("Command sent. Velocity set.")
 		else:
 			self.serverResponse.SetValue("Failed to send command")
 		client.shutdown(socket.SHUT_RDWR)
@@ -215,16 +248,23 @@ class GUIframe(wx.Frame):
 	def setDistanceForward(self, event):
 		# Generate variable from the user response.
 		revForward = float(self.distanceOption.GetValue())
-		stepsForward = str(revForward * 25000)
-		distanceForward = 'D+' + stepsForward + '\n'
+		units = self.distanceOption.GetValue()
+		command = ''
+
+		# Determine units of user choice.
+		if (units == 'Revolutions'):
+			command = 'D+' + str(revForward * 25000) + '\n'
+		elif (units == 'Millimetres'):
+			# 1 revolution = 4.91 mm travelled.
+			command = 'D+' + str(revForward * (25,000/4.91)) + '\n'
 
 		#TCP/IP communication.
 		client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		client.connect(('127.0.0.1', 7777))
-		client.send(distanceForward)
+		client.send(command)
 		resp = client.recv(4096)
 		if (len(resp) > 0):
-			self.serverResponse.SetValue("Command sent. D+ " + str(revForward) + " revolutions")
+			self.serverResponse.SetValue("Command sent. Distance set forward.")
 		else:
 			self.serverResponse.SetValue("Failed to send command")
 		client.shutdown(socket.SHUT_RDWR)
@@ -233,16 +273,23 @@ class GUIframe(wx.Frame):
 	def setDistanceReverse(self, event):
 		# Generate variable from the user response.
 		revReverse = float(self.distanceOption.GetValue())
-		stepsReverse = str(revReverse * 25000)
-		distanceReverse = 'D+' + stepsReverse + '\n'
+		units = self.distanceOption.GetValue()
+		command = ''
+		
+		# Determine units of user choice.
+		if (units == 'Revolutions'):
+			command = 'D-' + str(revReverse * 25000) + '\n'
+		elif (units == 'Millimetres'):
+			# 1 revolution = 4.91 mm travelled.
+			command = 'D-' + str(revReverse * (25,000/4.91)) + '\n'
 
 		#TCP/IP communication.
 		client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		client.connect(('127.0.0.1', 7777))
-		client.send(distanceReverse)
+		client.send(command)
 		resp = client.recv(4096)
 		if (len(resp) > 0):
-			self.serverResponse.SetValue("Command sent. D- " + str(revReverse) + " revolutions")
+			self.serverResponse.SetValue("Command sent. Distance set reverse.")
 		else:
 			self.serverResponse.SetValue("Failed to send command")
 		client.shutdown(socket.SHUT_RDWR)
@@ -278,6 +325,12 @@ class GUIframe(wx.Frame):
 
 		wx.AboutBox(info)
 	
+	def speedError(self, event):						# Not really used right now.
+		wx.MessageBox(
+			'Select a speed unit!', 
+			'Error', 
+			wx.OK|wx.ICON_ERROR
+			)
 
 if __name__ == '__main__':
 
