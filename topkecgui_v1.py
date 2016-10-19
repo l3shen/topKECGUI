@@ -194,6 +194,7 @@ class GUIframe(wx.Frame):
 		# topSizer.Add(logoSizer, 0, wx.CENTER)
 		topSizer.Add(wx.StaticLine(panel,), 0, wx.ALL|wx.EXPAND, 5)
 		topSizer.Add(speedSizer, 0, wx.ALL|wx.CENTER, 5)
+		topSizer.Add(wx.StaticLine(panel,), 0, wx.ALL|wx.EXPAND, 5)
 		topSizer.Add(distanceSizer, 0, wx.ALL|wx.CENTER, 5)
 		topSizer.Add(directionSizer, 0, wx.ALL|wx.CENTER, 5)
 		topSizer.Add(wx.StaticLine(panel,), 0, wx.ALL|wx.EXPAND, 5)
@@ -213,10 +214,10 @@ class GUIframe(wx.Frame):
 		command = ''
 
 		# Determine user units of choice.
-		units = self.speedChoice.GetValue()
-		if (units == 'rev/s'):						# If user selects rev/s, it is default.
+		speedUnits = self.speedChoice.GetValue()
+		if (speedUnits == 'rev/s'):						# If user selects rev/s, it is default.
 			command = 'V' + speed + '\n'
-		elif (units == 'micron/s'):
+		elif (speedUnits == 'micron/s'):
 			command = 'V' + str(int(speed * (6.13333e-4))) + '\n'
 		
 		# TCP/IP communication.
@@ -248,13 +249,13 @@ class GUIframe(wx.Frame):
 	def setDistanceForward(self, event):
 		# Generate variable from the user response.
 		revForward = float(self.distanceOption.GetValue())
-		units = self.distanceOption.GetValue()
+		forwardUnits = self.distanceChoice.GetValue()
 		command = ''
 
 		# Determine units of user choice.
-		if (units == 'Revolutions'):
+		if (forwardUnits == 'Revolutions'):
 			command = 'D+' + str(revForward * 25000) + '\n'
-		elif (units == 'Millimetres'):
+		elif (forwardUnits == 'Millimetres'):
 			# 1 revolution = 4.91 mm travelled.
 			command = 'D+' + str(revForward * (25,000/4.91)) + '\n'
 
@@ -273,13 +274,13 @@ class GUIframe(wx.Frame):
 	def setDistanceReverse(self, event):
 		# Generate variable from the user response.
 		revReverse = float(self.distanceOption.GetValue())
-		units = self.distanceOption.GetValue()
+		reverseUnits = self.distanceChoice.GetValue()
 		command = ''
 		
 		# Determine units of user choice.
-		if (units == 'Revolutions'):
+		if (reverseUnits == 'Revolutions'):
 			command = 'D-' + str(revReverse * 25000) + '\n'
-		elif (units == 'Millimetres'):
+		elif (reverseUnits == 'Millimetres'):
 			# 1 revolution = 4.91 mm travelled.
 			command = 'D-' + str(revReverse * (25,000/4.91)) + '\n'
 
